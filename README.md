@@ -1,144 +1,313 @@
-# 📁 Squelette de projet : Flask + React + PostgreSQL
+# 📚 Réseau Littéraire ESME
 
-Ce projet constitue un **squelette de départ** pour construire une application web full-stack à base de :
+Une plateforme web complète pour les ateliers d'écriture, permettant aux utilisateurs de publier, partager et commenter des œuvres littéraires.
 
-* **Back-end** : Flask (Python)
-* **Front-end** : React (Vite)
-* **Base de données** : PostgreSQL
+## 🚀 Fonctionnalités
 
-Le tout est prêt à être exécuté localement via **Docker** et **Docker Compose**.
+### ✨ **Authentification**
+- Inscription et connexion sécurisées
+- Gestion des profils utilisateurs
+- Système de rôles (auteur, admin)
 
----
+### 📝 **Publication d'œuvres**
+- Création de textes (poèmes, romans, nouvelles, essais)
+- Limite de 2 publications par semaine
+- Association optionnelle à des livres
+- Statuts : brouillon, publié, archivé
 
-## ✅ Objectif de ce squelette
+### 🔍 **Exploration et découverte**
+- Filtrage par genre littéraire
+- Tri par popularité ou date récente
+- Système de likes et commentaires
+- Notation par étoiles (1-5)
 
-Ce projet est destiné à servir de base pour votre propre développement.
+### 👥 **Communauté**
+- Ateliers d'écriture collaboratifs
+- Groupes publics et privés
+- Profils utilisateurs avec statistiques
+- Historique d'activité complet
 
-**Ce que vous devez faire :**
+### 📊 **Tableau de bord personnel**
+- Mes publications avec statistiques
+- Mes commentaires et notes données
+- Œuvres aimées
+- Limite de publication en temps réel
 
-1. **Cloner** ce dépôt
-2. **Lancer l'application localement** (voir ci-dessous)
-3. **Construire votre projet** à partir de cette structure
+## 🛠 Architecture Technique
 
----
+- **Backend** : Flask (Python) avec SQLAlchemy
+- **Frontend** : React (Vite) avec Axios
+- **Base de données** : SQLite (développement)
+- **Authentification** : JWT (JSON Web Tokens)
+- **Styling** : CSS moderne avec animations
 
-## ⚡ Prérequis
+## 📋 Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé les outils suivants :
+- **Python 3.9+** avec pip
+- **Node.js 16+** avec npm
+- **Git** pour le clonage du projet
 
-### Pour Windows / MacOS / Linux :
+## 🚀 Installation et Lancement
 
-* [Docker Desktop](https://www.docker.com/products/docker-desktop) (inclut Docker + Docker Compose)
-* Git (pour cloner le projet)
-* **Make** (outil pour exécuter des commandes automatisées)
-
-  * Windows : installez via [Chocolatey](https://chocolatey.org/) : `choco install make`
-  * MacOS : inclus avec Xcode : `xcode-select --install`
-  * Linux : `sudo apt install make` (Debian/Ubuntu) ou `sudo dnf install make` (Fedora)
-
-Vous pouvez vérifier leur installation avec :
-
-```bash
-docker --version
-docker-compose --version
-git --version
-make --version
-```
-
----
-
-## 🔄 Installation et exécution locale
-
-### 1. Cloner le projet
-
+### 1. **Cloner le projet**
 ```bash
 git clone <url-du-repo>
-cd <nom-du-dossier>
+cd esme_webservice_full
 ```
 
-### 2. Lancer l'application (backend, frontend et BDD)
+### 2. **Lancer le Backend (Flask)**
 
+#### Installation des dépendances :
 ```bash
-make docker-build
+cd backend
+pip install flask flask-sqlalchemy flask-jwt-extended flask-cors flask-login flask-migrate python-dotenv
 ```
 
-ou directement :
-
+#### Lancement du serveur :
 ```bash
-docker-compose up --build
+python app.py
 ```
 
-### 3. Accéder à l'application
+✅ **Le backend sera accessible sur** : `http://localhost:5009`
 
-* Frontend : [http://localhost:3000](http://localhost:3000)
-* Backend API : [http://localhost:5009](http://localhost:5009)
-* Base de données PostgreSQL :
+#### Vérification du backend :
+```bash
+curl http://localhost:5009/api/
+```
 
-  * Hôte : `localhost`
-  * Port : `5432`
-  * Utilisateur : `myuser`
-  * Mot de passe : `mot_de_passe`
-  * Base : `esme_inge`
+### 3. **Lancer le Frontend (React)**
 
----
+#### Dans un nouveau terminal :
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## 🧠 Structure du projet
+✅ **Le frontend sera accessible sur** : `http://localhost:5173`
+
+## 🛑 Arrêter les serveurs
+
+### **Arrêter le Backend**
+Dans le terminal du backend, appuyez sur :
+```
+Ctrl + C
+```
+
+### **Arrêter le Frontend**
+Dans le terminal du frontend, appuyez sur :
+```
+Ctrl + C
+```
+
+### **Vérifier qu'aucun processus ne tourne**
+```bash
+# Vérifier les processus sur le port 5009 (backend)
+lsof -i :5009
+
+# Vérifier les processus sur le port 5173 (frontend)
+lsof -i :5173
+
+# Tuer un processus si nécessaire
+kill -9 <PID>
+```
+
+## 🔧 Commandes utiles
+
+### **Backend**
+```bash
+# Lancer le backend
+cd backend && python app.py
+
+# Vérifier la santé de l'API
+curl http://localhost:5009/api/
+
+# Tester l'inscription
+curl -X POST http://localhost:5009/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test", "email": "test@example.com", "password": "password123"}'
+```
+
+### **Frontend**
+```bash
+# Lancer le frontend
+cd frontend && npm run dev
+
+# Build pour production
+npm run build
+
+# Prévisualiser le build
+npm run preview
+```
+
+## 📁 Structure du projet
 
 ```
-full-app/
-├── backend/         # Application Flask + DB migrations
-├── frontend/        # Application React (Vite)
-├── docker-compose.yml
-├── Makefile         # Commandes utiles pour dev
+esme_webservice_full/
+├── backend/                 # API Flask
+│   ├── app.py              # Point d'entrée
+│   ├── config.py           # Configuration
+│   ├── models.py           # Modèles de données
+│   └── routes/             # Routes API
+│       ├── users.py        # Authentification
+│       ├── literary_works.py # Œuvres littéraires
+│       ├── workshops.py    # Ateliers
+│       ├── groups.py       # Groupes
+│       └── books.py        # Livres
+├── frontend/               # Application React
+│   ├── src/
+│   │   ├── pages/          # Pages principales
+│   │   ├── services/       # Services API
+│   │   └── styles/         # Styles CSS
+│   └── package.json
 └── README.md
 ```
 
----
+## 🎯 Utilisation
 
-## 🚀 Commandes utiles (via `make`)
+### **1. Première connexion**
+1. Ouvrez `http://localhost:5173`
+2. Cliquez sur "S'inscrire"
+3. Remplissez le formulaire d'inscription
+4. Connectez-vous avec vos identifiants
 
+### **2. Utiliser les comptes de test**
+Pour tester rapidement l'application, vous pouvez utiliser les comptes pré-créés :
+
+**Comptes disponibles** (mot de passe : `password123`) :
+- `marie.dubois@email.com` - Poète spécialisée en littérature contemporaine
+- `julien.martin@email.com` - Auteur de science-fiction et fantastique  
+- `sophie.bernard@email.com` - Amatrice de romans historiques
+- `lucas.petit@email.com` - Spécialiste des nouvelles et récits courts
+- `camille.robert@email.com` - Poète et dramaturge
+- `antoine.moreau@email.com` - Critique littéraire
+- `lea.simon@email.com` - Étudiante en lettres
+- `maxime.laurent@email.com` - Auteur de thrillers
+- `clara.michel@email.com` - Spécialiste littérature jeunesse
+- `thomas.garcia@email.com` - Journaliste et nouvelliste
+
+**Données de test incluses** :
+- ✅ **10 utilisateurs** avec profils complets
+- ✅ **10 livres** publiés par les auteurs
+- ✅ **6 œuvres littéraires** (poèmes, romans, nouvelles, essais)
+- ✅ **3 ateliers d'écriture** avec participants
+- ✅ **Likes et commentaires** sur les œuvres
+
+### **3. Publier une œuvre**
+1. Cliquez sur "Publier une œuvre"
+2. Remplissez le formulaire (titre, contenu, type)
+3. Choisissez le statut (brouillon/publié)
+4. Soumettez votre création
+
+### **4. Explorer les œuvres**
+1. Allez dans "Explorer"
+2. Utilisez les filtres par genre
+3. Triez par popularité ou date
+4. Likez et commentez les œuvres
+
+### **5. Gérer son profil**
+1. Accédez à "Mon espace"
+2. Consultez vos statistiques
+3. Gérez vos publications
+4. Suivez votre activité
+
+## 🔧 Gestion des données de test
+
+### **Créer les données de test**
 ```bash
-make docker-build   # Build et démarre tous les services
-make docker-up      # Démarre sans rebuild
-make docker-down    # Stoppe et supprime les conteneurs
-make db-init        # Init migrations (une seule fois)
-make db-migrate     # Crée une nouvelle migration
-make db-upgrade     # Applique les migrations
-make db-reset       # Supprime + recrée la base
+cd backend
+python create_test_data.py
 ```
 
+### **Afficher un résumé des données**
+```bash
+cd backend
+python show_test_data.py
+```
+
+### **Réinitialiser la base de données**
+```bash
+cd backend
+rm esme_litteraire.db
+python app.py  # Recrée automatiquement la base vide
+python create_test_data.py  # Recrée les données de test
+```
+
+## 🐛 Résolution de problèmes
+
+### **Port déjà utilisé**
+```bash
+# Trouver le processus utilisant le port
+lsof -i :5009  # ou :5173
+
+# Tuer le processus
+kill -9 <PID>
+```
+
+### **Erreur de base de données**
+```bash
+# Supprimer la base de données et la recréer
+cd backend
+rm esme_litteraire.db
+python app.py
+```
+
+### **Erreur "Module not found"**
+```bash
+# Réinstaller les dépendances Python
+cd backend
+pip install -r requirements.txt
+
+# Réinstaller les dépendances Node.js
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### **Erreur CORS**
+Vérifiez que :
+- Le backend tourne sur le port 5009
+- Le frontend tourne sur le port 5173
+- Les deux serveurs sont démarrés
+
+## 📊 API Endpoints
+
+### **Authentification**
+- `POST /api/register` - Inscription
+- `POST /api/login` - Connexion
+- `GET /api/profile` - Profil utilisateur
+
+### **Œuvres littéraires**
+- `GET /api/literary-works` - Liste des œuvres
+- `POST /api/literary-works` - Créer une œuvre
+- `GET /api/literary-works/:id` - Détail d'une œuvre
+- `POST /api/literary-works/:id/like` - Liker une œuvre
+- `POST /api/literary-works/:id/comments` - Commenter
+
+### **Autres**
+- `GET /api/workshops` - Ateliers
+- `GET /api/groups` - Groupes
+- `GET /api/books` - Livres
+
+## 🎨 Optimisations incluses
+
+- **Backend** : Requêtes SQL optimisées, eager loading
+- **Frontend** : Cache intelligent, debouncing, lazy loading
+- **CSS** : GPU acceleration, containment, transitions rapides
+- **API** : Timeout, gestion d'erreurs, invalidation de cache
+
+## 👥 Contribution
+
+1. Fork le projet
+2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
 ---
 
-## 🛠️ Conseils pour développement
-
-* Codez dans `backend/` et `frontend/`
-* Toute modification est automatiquement prise en compte au redémarrage des conteneurs
-* Si erreur base de données : vérifiez les migrations (`make db-upgrade`)
-
----
-
-## 📊 Problèmes courants
-
-| Problème                           | Solution                                                                                   |
-| ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| Frontend affiche 404 sur une route | NGINX est configuré pour rediriger vers `index.html`. Assurez-vous que le build est bon.   |
-| Erreur de connexion DB             | Vérifiez si la base est bien démarrée (`docker ps`) et que les migrations sont appliquées. |
-| Port déjà utilisé                  | Modifiez les ports dans `docker-compose.yml`.                                              |
-
----
-
-## 🚫 Ce que vous ne devez pas modifier
-
-* Ne changez pas le `docker-compose.yml` sauf si vous comprenez bien les impacts.
-* Ne modifiez pas le `Dockerfile` sans refaire les builds.
-
----
-
-## 📅 Prochaines étapes
-
-1. Définissez les routes de votre API Flask
-2. Construisez votre UI React
-3. Ajoutez vos tables et migrations si besoin
-4. Gérez l'authentification si nécessaire
-
-Bon développement ! 🚀
+**Développé avec ❤️ pour ESME Sudria**

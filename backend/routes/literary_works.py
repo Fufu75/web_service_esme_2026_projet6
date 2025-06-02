@@ -1,19 +1,35 @@
 from flask import Blueprint, request, jsonify
-from backend.models import db, LiteraryWork, User, Comment
+from models import db, LiteraryWork, User, Comment, literary_work_likes
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
+from datetime import datetime, timedelta
+from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 
 literary_works_bp = Blueprint('literary_works', __name__)
+
+def get_current_user_id():
+    """Utilitaire pour obtenir l'ID utilisateur actuel depuis le JWT"""
+    return int(get_jwt_identity())
 
 @literary_works_bp.route('/literary-works', methods=['POST'])
 @jwt_required()
 def create_literary_work():
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     data = request.get_json()
     
     # Vérification des champs requis
     if not all(key in data for key in ['title', 'content', 'type']):
         return jsonify({'error': 'Tous les champs requis doivent être remplis'}), 400
+    
+    # Vérification de la limite de publication (2 textes par semaine)
+    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_works = LiteraryWork.query.filter(
+        LiteraryWork.author_id == current_user_id,
+        LiteraryWork.created_at >= one_week_ago
+    ).count()
+    
+    if recent_works >= 2:
+        return jsonify({'error': 'Vous avez atteint la limite de 2 publications par semaine'}), 429
     
     # Création de l'œuvre littéraire
     new_work = LiteraryWork(
@@ -23,7 +39,8 @@ def create_literary_work():
         status=data.get('status', 'draft'),
         author_id=current_user_id,
         workshop_id=data.get('workshop_id'),
-        group_id=data.get('group_id')
+        group_id=data.get('group_id'),
+        book_id=data.get('book_id')  # Ajout du book_id optionnel
     )
     
     db.session.add(new_work)
@@ -31,7 +48,7 @@ def create_literary_work():
     
     return jsonify({
         'message': 'Œuvre littéraire créée avec succès',
-        'literary_work': {
+        'work': {
             'id': new_work.id,
             'title': new_work.title,
             'type': new_work.type,
@@ -41,7 +58,6 @@ def create_literary_work():
     }), 201
 
 @literary_works_bp.route('/literary-works', methods=['GET'])
-@jwt_required()
 def get_literary_works():
     # Paramètres de filtrage
     author_id = request.args.get('author_id', type=int)
@@ -49,23 +65,32 @@ def get_literary_works():
     status = request.args.get('status')
     workshop_id = request.args.get('workshop_id', type=int)
     group_id = request.args.get('group_id', type=int)
+    sort_by = request.args.get('sort_by', 'recent')  # 'recent', 'popularity'
     
-    # Construction de la requête
-    query = LiteraryWork.query
+    # Construction de la requête simplifiée
+    query = LiteraryWork.query.join(User, LiteraryWork.author_id == User.id)
     
+    # Filtres
     if author_id:
         query = query.filter(LiteraryWork.author_id == author_id)
     if work_type:
         query = query.filter(LiteraryWork.type == work_type)
     if status:
         query = query.filter(LiteraryWork.status == status)
+    else:
+        # Par défaut, ne montrer que les œuvres publiées si pas d'authentification
+        query = query.filter(LiteraryWork.status == 'published')
     if workshop_id:
         query = query.filter(LiteraryWork.workshop_id == workshop_id)
     if group_id:
         query = query.filter(LiteraryWork.group_id == group_id)
     
-    # Trier par date de création (du plus récent au plus ancien)
-    query = query.order_by(LiteraryWork.created_at.desc())
+    # Tri selon le paramètre
+    if sort_by == 'popularity':
+        # Pour le tri par popularité, on compte les likes
+        query = query.outerjoin(literary_work_likes).group_by(LiteraryWork.id).order_by(func.count(literary_work_likes.c.user_id).desc())
+    else:
+        query = query.order_by(LiteraryWork.created_at.desc())
     
     # Exécution de la requête
     works = query.all()
@@ -73,7 +98,10 @@ def get_literary_works():
     # Formatage de la réponse
     works_list = []
     for work in works:
-        author = User.query.get(work.author_id)
+        # Compter les likes et commentaires séparément
+        likes_count = len(work.likes)
+        comments_count = len(work.comments)
+        
         work_data = {
             'id': work.id,
             'title': work.title,
@@ -82,28 +110,42 @@ def get_literary_works():
             'created_at': work.created_at.isoformat(),
             'updated_at': work.updated_at.isoformat(),
             'author': {
-                'id': author.id,
-                'username': author.username,
-                'profile_picture': author.profile_picture
+                'id': work.author.id,
+                'username': work.author.username,
+                'profile_picture': work.author.profile_picture
             },
-            'likes_count': len(work.likes),
-            'comments_count': len(work.comments)
+            'likes_count': likes_count,
+            'comments_count': comments_count
         }
+        
+        # Ajouter les informations du livre si présent
+        if work.book:
+            work_data['book'] = {
+                'id': work.book.id,
+                'title': work.book.title,
+                'author': work.book.author
+            }
+        
         works_list.append(work_data)
     
     return jsonify(works_list), 200
 
 @literary_works_bp.route('/literary-works/<int:work_id>', methods=['GET'])
-@jwt_required()
 def get_literary_work(work_id):
-    work = LiteraryWork.query.get(work_id)
+    # Requête optimisée avec jointures
+    work = LiteraryWork.query.options(
+        joinedload(LiteraryWork.author),
+        joinedload(LiteraryWork.comments).joinedload(Comment.user),
+        joinedload(LiteraryWork.workshop),
+        joinedload(LiteraryWork.group),
+        joinedload(LiteraryWork.book),
+        joinedload(LiteraryWork.likes)
+    ).get(work_id)
     
     if not work:
         return jsonify({'error': 'Œuvre littéraire non trouvée'}), 404
     
-    author = User.query.get(work.author_id)
-    
-    # Formatage de la réponse avec le contenu complet et l'auteur
+    # Formatage de la réponse optimisé
     work_data = {
         'id': work.id,
         'title': work.title,
@@ -113,11 +155,12 @@ def get_literary_work(work_id):
         'created_at': work.created_at.isoformat(),
         'updated_at': work.updated_at.isoformat(),
         'author': {
-            'id': author.id,
-            'username': author.username,
-            'profile_picture': author.profile_picture
+            'id': work.author.id,
+            'username': work.author.username,
+            'profile_picture': work.author.profile_picture
         },
         'likes_count': len(work.likes),
+        'likes': [{'id': user.id, 'username': user.username} for user in work.likes],
         'comments': [{
             'id': comment.id,
             'content': comment.content,
@@ -145,12 +188,20 @@ def get_literary_work(work_id):
             'name': work.group.name
         }
     
+    # Ajouter les informations du livre si présent
+    if work.book:
+        work_data['book'] = {
+            'id': work.book.id,
+            'title': work.book.title,
+            'author': work.book.author
+        }
+    
     return jsonify(work_data), 200
 
 @literary_works_bp.route('/literary-works/<int:work_id>', methods=['PUT'])
 @jwt_required()
 def update_literary_work(work_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     work = LiteraryWork.query.get(work_id)
     
     if not work:
@@ -175,6 +226,8 @@ def update_literary_work(work_id):
         work.workshop_id = data['workshop_id']
     if 'group_id' in data:
         work.group_id = data['group_id']
+    if 'book_id' in data:
+        work.book_id = data['book_id']
     
     # Mettre à jour la date de modification
     work.updated_at = datetime.utcnow()
@@ -195,7 +248,7 @@ def update_literary_work(work_id):
 @literary_works_bp.route('/literary-works/<int:work_id>', methods=['DELETE'])
 @jwt_required()
 def delete_literary_work(work_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     work = LiteraryWork.query.get(work_id)
     
     if not work:
@@ -215,7 +268,7 @@ def delete_literary_work(work_id):
 @literary_works_bp.route('/literary-works/<int:work_id>/like', methods=['POST'])
 @jwt_required()
 def like_literary_work(work_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     work = LiteraryWork.query.get(work_id)
     user = User.query.get(current_user_id)
     
@@ -238,7 +291,7 @@ def like_literary_work(work_id):
 @literary_works_bp.route('/literary-works/<int:work_id>/unlike', methods=['POST'])
 @jwt_required()
 def unlike_literary_work(work_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     work = LiteraryWork.query.get(work_id)
     user = User.query.get(current_user_id)
     
@@ -261,7 +314,7 @@ def unlike_literary_work(work_id):
 @literary_works_bp.route('/literary-works/<int:work_id>/comments', methods=['POST'])
 @jwt_required()
 def add_comment(work_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     work = LiteraryWork.query.get(work_id)
     
     if not work:
@@ -295,4 +348,25 @@ def add_comment(work_id):
                 'username': new_comment.user.username
             }
         }
-    }), 201 
+    }), 201
+
+@literary_works_bp.route('/literary-works/publication-limit', methods=['GET'])
+@jwt_required()
+def check_publication_limit():
+    current_user_id = get_current_user_id()
+    
+    # Vérifier combien de publications ont été faites cette semaine
+    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_works = LiteraryWork.query.filter(
+        LiteraryWork.author_id == current_user_id,
+        LiteraryWork.created_at >= one_week_ago
+    ).count()
+    
+    remaining_publications = max(0, 2 - recent_works)
+    
+    return jsonify({
+        'publications_this_week': recent_works,
+        'remaining_publications': remaining_publications,
+        'limit': 2,
+        'can_publish': remaining_publications > 0
+    }), 200 

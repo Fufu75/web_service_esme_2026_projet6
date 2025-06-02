@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from models import db, Book
 from datetime import datetime
 from flask_cors import CORS
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 books_bp = Blueprint('books', __name__)
 

@@ -1,0 +1,10 @@
+   - marie_dubois / marie.dubois@email.com / password123
+   - julien_martin / julien.martin@email.com / password123
+   - sophie_bernard / sophie.bernard@email.com / password123
+   - lucas_petit / lucas.petit@email.com / password123
+   - camille_robert / camille.robert@email.com / password123
+   - antoine_moreau / antoine.moreau@email.com / password123
+   - lea_simon / lea.simon@email.com / password123
+   - maxime_laurent / maxime.laurent@email.com / password123
+   - clara_michel / clara.michel@email.com / password123
+   - thomas_garcia / thomas.garcia@email.com / password123

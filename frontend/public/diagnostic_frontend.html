@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Diagnostic Frontend - Réseau Littéraire</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; font-family: monospace; font-size: 12px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto; }
+        .step { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .status { font-weight: bold; margin-right: 10px; }
+        .token-display { word-break: break-all; font-size: 10px; background: #e9ecef; padding: 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic Frontend - Réseau Littéraire ESME</h1>
+        <p>Cette page diagnostique pourquoi vous ne pouvez pas accéder au profil.</p>
+        
+        <div class="section info">
+            <h3>📋 Plan de diagnostic</h3>
+            <div class="step">1. Vérifier l'état du localStorage</div>
+            <div class="step">2. Tester la connexion API</div>
+            <div class="step">3. Vérifier le token JWT</div>
+            <div class="step">4. Tester l'accès au profil</div>
+            <div class="step">5. Analyser les headers de requête</div>
+        </div>
+
+        <!-- Étape 1: État du localStorage -->
+        <div class="section">
+            <h3>1. État du localStorage</h3>
+            <button onclick="checkLocalStorage()">Vérifier le stockage</button>
+            <button onclick="clearStorage()">Vider le stockage</button>
+            <div id="storageResult" class="result"></div>
+        </div>
+
+        <!-- Étape 2: Test de connexion -->
+        <div class="section">
+            <h3>2. Test de connexion API</h3>
+            <button onclick="testLogin()">Se connecter</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <!-- Étape 3: Validation du token -->
+        <div class="section">
+            <h3>3. Validation du token JWT</h3>
+            <button onclick="validateToken()">Valider le token</button>
+            <div id="tokenResult" class="result"></div>
+        </div>
+
+        <!-- Étape 4: Test d'accès au profil -->
+        <div class="section">
+            <h3>4. Test d'accès au profil</h3>
+            <button onclick="testProfile()">Accéder au profil</button>
+            <button onclick="testProfileWithFetch()">Test avec fetch natif</button>
+            <div id="profileResult" class="result"></div>
+        </div>
+
+        <!-- Étape 5: Analyse des headers -->
+        <div class="section">
+            <h3>5. Analyse des headers de requête</h3>
+            <button onclick="analyzeHeaders()">Analyser les headers</button>
+            <div id="headersResult" class="result"></div>
+        </div>
+
+        <!-- Résumé du diagnostic -->
+        <div class="section" id="diagnosticSummary" style="display: none;">
+            <h3>📊 Résumé du diagnostic</h3>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5009/api';
+        let diagnosticResults = {};
+
+        function log(step, status, message, data = null) {
+            diagnosticResults[step] = { status, message, data };
+            console.log(`[${step}] ${status}: ${message}`, data);
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summaryContent');
+            const diagnosticDiv = document.getElementById('diagnosticSummary');
+            
+            let html = '';
+            let hasErrors = false;
+            
+            for (const [step, result] of Object.entries(diagnosticResults)) {
+                const statusClass = result.status === 'SUCCESS' ? 'success' : 
+                                  result.status === 'ERROR' ? 'error' : 'warning';
+                if (result.status === 'ERROR') hasErrors = true;
+                
+                html += `<div class="${statusClass}">
+                    <strong>${step}:</strong> ${result.message}
+                </div>`;
+            }
+            
+            if (Object.keys(diagnosticResults).length > 0) {
+                summary.innerHTML = html;
+                diagnosticDiv.style.display = 'block';
+            }
+        }
+
+        function checkLocalStorage() {
+            const resultDiv = document.getElementById('storageResult');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            let html = '<strong>État du localStorage:</strong><br>';
+            
+            if (token) {
+                html += `✅ Token présent: ${token.substring(0, 50)}...<br>`;
+                html += `📏 Longueur du token: ${token.length} caractères<br>`;
+                
+                // Vérifier si le token est valide (format JWT)
+                const parts = token.split('.');
+                if (parts.length === 3) {
+                    html += `✅ Format JWT valide (3 parties)<br>`;
+                    try {
+                        const payload = JSON.parse(atob(parts[1]));
+                        html += `📅 Expiration: ${new Date(payload.exp * 1000).toLocaleString()}<br>`;
+                        html += `👤 Subject: ${payload.sub}<br>`;
+                        log('localStorage', 'SUCCESS', 'Token JWT valide trouvé', { tokenLength: token.length, payload });
+                    } catch (e) {
+                        html += `❌ Erreur de décodage du payload JWT<br>`;
+                        log('localStorage', 'ERROR', 'Token JWT invalide', e);
+                    }
+                } else {
+                    html += `❌ Format JWT invalide (${parts.length} parties au lieu de 3)<br>`;
+                    log('localStorage', 'ERROR', 'Format JWT invalide');
+                }
+            } else {
+                html += `❌ Aucun token trouvé<br>`;
+                log('localStorage', 'ERROR', 'Aucun token dans localStorage');
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    html += `✅ Données utilisateur: ${userData.username} (${userData.email})<br>`;
+                    log('localStorage', 'SUCCESS', 'Données utilisateur valides', userData);
+                } catch (e) {
+                    html += `❌ Données utilisateur corrompues<br>`;
+                    log('localStorage', 'ERROR', 'Données utilisateur corrompues', e);
+                }
+            } else {
+                html += `❌ Aucune donnée utilisateur<br>`;
+                log('localStorage', 'WARNING', 'Aucune donnée utilisateur');
+            }
+            
+            resultDiv.innerHTML = html;
+            updateSummary();
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            document.getElementById('storageResult').innerHTML = '🗑️ Stockage vidé';
+            log('clearStorage', 'SUCCESS', 'localStorage vidé');
+            updateSummary();
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '🔄 Connexion en cours...';
+            
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'marie.dubois@email.com',
+                        password: 'password123'
+                    })
+                });
+                
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    const data = JSON.parse(responseText);
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Connexion réussie !<br>
+                            👤 Utilisateur: ${data.user.username}<br>
+                            🔑 Token: ${data.access_token.substring(0, 50)}...<br>
+                            📊 Status: ${response.status}
+                        </div>
+                    `;
+                    log('login', 'SUCCESS', 'Connexion réussie', { user: data.user.username, status: response.status });
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Erreur de connexion<br>
+                            📊 Status: ${response.status}<br>
+                            📝 Réponse: ${responseText}
+                        </div>
+                    `;
+                    log('login', 'ERROR', `Erreur ${response.status}`, responseText);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Erreur de réseau: ${error.message}
+                    </div>
+                `;
+                log('login', 'ERROR', 'Erreur de réseau', error);
+            }
+            updateSummary();
+        }
+
+        function validateToken() {
+            const resultDiv = document.getElementById('tokenResult');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<div class="error">❌ Aucun token à valider</div>';
+                log('tokenValidation', 'ERROR', 'Aucun token disponible');
+                updateSummary();
+                return;
+            }
+            
+            try {
+                const parts = token.split('.');
+                const header = JSON.parse(atob(parts[0]));
+                const payload = JSON.parse(atob(parts[1]));
+                
+                const now = Math.floor(Date.now() / 1000);
+                const isExpired = payload.exp < now;
+                
+                let html = `
+                    <strong>Analyse du token JWT:</strong><br>
+                    🏷️ Type: ${header.typ}<br>
+                    🔐 Algorithme: ${header.alg}<br>
+                    👤 Subject: ${payload.sub}<br>
+                    📅 Émis le: ${new Date(payload.iat * 1000).toLocaleString()}<br>
+                    ⏰ Expire le: ${new Date(payload.exp * 1000).toLocaleString()}<br>
+                    ${isExpired ? '❌ Token expiré' : '✅ Token valide'}<br>
+                    🎭 Rôle: ${payload.role || 'Non défini'}
+                `;
+                
+                resultDiv.innerHTML = html;
+                log('tokenValidation', isExpired ? 'ERROR' : 'SUCCESS', 
+                    isExpired ? 'Token expiré' : 'Token valide', payload);
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur de décodage: ${error.message}</div>`;
+                log('tokenValidation', 'ERROR', 'Erreur de décodage du token', error);
+            }
+            updateSummary();
+        }
+
+        async function testProfile() {
+            const resultDiv = document.getElementById('profileResult');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<div class="error">❌ Connectez-vous d\'abord</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '🔄 Test d\'accès au profil...';
+            
+            try {
+                const response = await fetch(`${API_URL}/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    const profile = JSON.parse(responseText);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Profil récupéré avec succès !<br>
+                            👤 ${profile.username} (${profile.email})<br>
+                            📊 Status: ${response.status}<br>
+                            <pre>${JSON.stringify(profile, null, 2)}</pre>
+                        </div>
+                    `;
+                    log('profile', 'SUCCESS', 'Profil récupéré', { username: profile.username, status: response.status });
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Erreur d'accès au profil<br>
+                            📊 Status: ${response.status}<br>
+                            📝 Réponse: ${responseText}<br>
+                            🔍 Headers envoyés: Authorization: Bearer ${token.substring(0, 20)}...
+                        </div>
+                    `;
+                    log('profile', 'ERROR', `Erreur ${response.status}`, { response: responseText, tokenPreview: token.substring(0, 20) });
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Erreur de réseau: ${error.message}
+                    </div>
+                `;
+                log('profile', 'ERROR', 'Erreur de réseau', error);
+            }
+            updateSummary();
+        }
+
+        async function testProfileWithFetch() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            // Test avec XMLHttpRequest pour comparaison
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${API_URL}/profile`);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                const resultDiv = document.getElementById('profileResult');
+                resultDiv.innerHTML += `<br><strong>Test XMLHttpRequest:</strong><br>Status: ${xhr.status}<br>Response: ${xhr.responseText.substring(0, 200)}...`;
+            };
+            
+            xhr.send();
+        }
+
+        async function analyzeHeaders() {
+            const resultDiv = document.getElementById('headersResult');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<div class="error">❌ Aucun token pour analyser les headers</div>';
+                return;
+            }
+            
+            // Créer une requête de test pour analyser les headers
+            const testHeaders = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Origin': window.location.origin,
+                'User-Agent': navigator.userAgent
+            };
+            
+            let html = '<strong>Headers qui seront envoyés:</strong><br>';
+            for (const [key, value] of Object.entries(testHeaders)) {
+                html += `📋 ${key}: ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}<br>`;
+            }
+            
+            html += `<br><strong>Informations du navigateur:</strong><br>`;
+            html += `🌐 Origin: ${window.location.origin}<br>`;
+            html += `📍 URL actuelle: ${window.location.href}<br>`;
+            html += `🔧 User-Agent: ${navigator.userAgent.substring(0, 100)}...<br>`;
+            
+            resultDiv.innerHTML = html;
+            log('headers', 'SUCCESS', 'Headers analysés', testHeaders);
+            updateSummary();
+        }
+
+        // Auto-check au chargement
+        window.onload = function() {
+            checkLocalStorage();
+        };
+    </script>
+</body>
+</html> 

@@ -1,10 +1,14 @@
 from flask import Blueprint, request, jsonify
-from backend.models import db, User
+from models import db, User, LiteraryWork, Comment
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
 import re
 
 users_bp = Blueprint('users', __name__)
+
+def get_current_user_id():
+    """Utilitaire pour obtenir l'ID utilisateur actuel depuis le JWT"""
+    return int(get_jwt_identity())
 
 @users_bp.route('/register', methods=['POST'])
 def register():
@@ -42,7 +46,7 @@ def register():
     
     # Créer un token JWT pour l'authentification
     access_token = create_access_token(
-        identity=new_user.id,
+        identity=str(new_user.id),
         additional_claims={'role': new_user.role},
         expires_delta=timedelta(days=1)
     )
@@ -74,7 +78,7 @@ def login():
     
     # Créer un token JWT
     access_token = create_access_token(
-        identity=user.id,
+        identity=str(user.id),
         additional_claims={'role': user.role},
         expires_delta=timedelta(days=1)
     )
@@ -93,7 +97,7 @@ def login():
 @users_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     user = User.query.get(current_user_id)
     
     if not user:
@@ -114,7 +118,7 @@ def get_profile():
 @users_bp.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     user = User.query.get(current_user_id)
     
     if not user:
@@ -176,7 +180,6 @@ def get_users():
     return jsonify(users_list), 200
 
 @users_bp.route('/users/<int:user_id>', methods=['GET'])
-@jwt_required()
 def get_user(user_id):
     user = User.query.get(user_id)
     
@@ -192,4 +195,66 @@ def get_user(user_id):
         'profile_picture': user.profile_picture,
         'role': user.role,
         'created_at': user.created_at.isoformat()
-    }), 200 
+    }), 200
+
+@users_bp.route('/users/<int:user_id>/activity', methods=['GET'])
+@jwt_required()
+def get_user_activity(user_id):
+    current_user_id = get_current_user_id()
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'Utilisateur non trouvé'}), 404
+    
+    # Récupérer les publications de l'utilisateur
+    publications = LiteraryWork.query.filter_by(author_id=user_id).order_by(LiteraryWork.created_at.desc()).all()
+    
+    # Récupérer les commentaires de l'utilisateur
+    comments = Comment.query.filter_by(user_id=user_id).order_by(Comment.created_at.desc()).all()
+    
+    # Récupérer les œuvres aimées par l'utilisateur
+    liked_works = user.liked_works
+    
+    # Formatage de la réponse
+    activity = {
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'profile_picture': user.profile_picture
+        },
+        'publications': [{
+            'id': work.id,
+            'title': work.title,
+            'type': work.type,
+            'status': work.status,
+            'created_at': work.created_at.isoformat(),
+            'likes_count': len(work.likes),
+            'comments_count': len(work.comments)
+        } for work in publications],
+        'comments': [{
+            'id': comment.id,
+            'content': comment.content,
+            'rating': comment.rating,
+            'created_at': comment.created_at.isoformat(),
+            'literary_work': {
+                'id': comment.literary_work.id,
+                'title': comment.literary_work.title,
+                'author': comment.literary_work.author.username
+            }
+        } for comment in comments],
+        'liked_works': [{
+            'id': work.id,
+            'title': work.title,
+            'type': work.type,
+            'author': work.author.username,
+            'likes_count': len(work.likes)
+        } for work in liked_works],
+        'statistics': {
+            'total_publications': len(publications),
+            'total_comments': len(comments),
+            'total_likes_given': len(liked_works),
+            'total_likes_received': sum(len(work.likes) for work in publications)
+        }
+    }
+    
+    return jsonify(activity), 200 

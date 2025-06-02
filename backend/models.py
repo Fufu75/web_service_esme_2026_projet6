@@ -65,11 +65,13 @@ class LiteraryWork(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     workshop_id = db.Column(db.Integer, db.ForeignKey('workshop.id'))
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id'))  # Relation optionnelle avec un livre
     
     # Relations
     author = db.relationship('User', back_populates='literary_works')
     workshop = db.relationship('Workshop', back_populates='works')
     group = db.relationship('Group', back_populates='works')
+    book = db.relationship('Book')  # Relation avec Book
     comments = db.relationship('Comment', back_populates='literary_work', cascade='all, delete-orphan')
     
     # Many-to-many relations

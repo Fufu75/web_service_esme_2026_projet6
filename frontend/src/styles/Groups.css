@@ -1,0 +1,427 @@
+/* Styles pour les pages de groupes */
+
+/* Liste des groupes */
+.groups-container {
+  padding: 1rem;
+}
+
+.groups-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.groups-header h1 {
+  font-size: 2rem;
+  color: #333;
+}
+
+.groups-create-btn {
+  background-color: #4a6fa5;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.groups-create-btn:hover {
+  background-color: #3a5a8c;
+}
+
+.groups-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f7f7f7;
+  border-radius: 5px;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-item label {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.groups-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.group-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.group-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.group-card-header {
+  background-color: #4a6fa5;
+  color: white;
+  padding: 1rem;
+}
+
+.group-card-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.group-card-content {
+  padding: 1rem;
+}
+
+.group-privacy-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.public-group {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.private-group {
+  background-color: #ff9800;
+  color: white;
+}
+
+.group-card-creator {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.group-card-creator img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  object-fit: cover;
+}
+
+.group-card-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.group-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.8rem;
+  border-top: 1px solid #eee;
+}
+
+.view-group-btn {
+  text-decoration: none;
+  color: #4a6fa5;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.view-group-btn:hover {
+  color: #3a5a8c;
+}
+
+/* Détail d'un groupe */
+.group-detail-container {
+  padding: 1rem;
+}
+
+.group-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.group-info h1 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.group-description {
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.group-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.join-btn, .leave-btn, .edit-btn, .delete-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.join-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.join-btn:hover {
+  background-color: #3e8e41;
+}
+
+.leave-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.leave-btn:hover {
+  background-color: #d32f2f;
+}
+
+.edit-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #0b7dda;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+.group-detail-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .group-detail-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.group-works, .group-members {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.group-section-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  background-color: #f7f7f7;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+}
+
+.member-item img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.5rem;
+}
+
+.member-name {
+  font-weight: 500;
+}
+
+.group-creator-badge {
+  margin-left: 0.5rem;
+  background-color: #ff9800;
+  color: white;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+
+.works-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.work-card {
+  background-color: #f7f7f7;
+  border-radius: 5px;
+  padding: 1rem;
+  transition: transform 0.2s;
+}
+
+.work-card:hover {
+  transform: translateY(-3px);
+}
+
+.work-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.work-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.work-author {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Formulaires */
+.group-form-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.group-form h1 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #4a6fa5;
+}
+
+textarea.form-control {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group input {
+  margin-right: 0.5rem;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.form-cancel-btn {
+  padding: 0.8rem 1.5rem;
+  background-color: #f1f1f1;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.form-cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.form-submit-btn {
+  padding: 0.8rem 1.5rem;
+  background-color: #4a6fa5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.form-submit-btn:hover {
+  background-color: #3a5a8c;
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+.success-message {
+  color: #4CAF50;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+} 

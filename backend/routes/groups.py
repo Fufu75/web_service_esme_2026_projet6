@@ -1,13 +1,17 @@
 from flask import Blueprint, request, jsonify
-from backend.models import db, Group, User
+from models import db, Group, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 groups_bp = Blueprint('groups', __name__)
 
+def get_current_user_id():
+    """Utilitaire pour obtenir l'ID utilisateur actuel depuis le JWT"""
+    return int(get_jwt_identity())
+
 @groups_bp.route('/groups', methods=['POST'])
 @jwt_required()
 def create_group():
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     data = request.get_json()
     
     # Vérification des champs requis
@@ -46,22 +50,21 @@ def create_group():
     }), 201
 
 @groups_bp.route('/groups', methods=['GET'])
-@jwt_required()
 def get_groups():
     # Paramètres de filtrage
     creator_id = request.args.get('creator_id', type=int)
     is_private = request.args.get('is_private', type=bool)
-    member_id = request.args.get('member_id', type=int)
     
-    # Construction de la requête
-    query = Group.query
+    # Construction de la requête - ne montrer que les groupes publics par défaut
+    query = Group.query.filter(Group.is_private == False)
     
     if creator_id:
         query = query.filter(Group.creator_id == creator_id)
     if is_private is not None:
         query = query.filter(Group.is_private == is_private)
-    if member_id:
-        query = query.filter(Group.members.any(id=member_id))
+    
+    # Trier par date de création (du plus récent au plus ancien)
+    query = query.order_by(Group.created_at.desc())
     
     # Exécution de la requête
     groups = query.all()
@@ -81,26 +84,30 @@ def get_groups():
                 'username': creator.username,
                 'profile_picture': creator.profile_picture
             },
-            'members_count': len(group.members),
-            'works_count': len(group.works)
+            'members_count': len(group.members)
         }
         groups_list.append(group_data)
     
     return jsonify(groups_list), 200
 
 @groups_bp.route('/groups/<int:group_id>', methods=['GET'])
-@jwt_required()
+@jwt_required(optional=True)
 def get_group(group_id):
-    current_user_id = get_jwt_identity()
     group = Group.query.get(group_id)
     
     if not group:
         return jsonify({'error': 'Groupe non trouvé'}), 404
     
-    # Vérifier l'accès si le groupe est privé
-    current_user = User.query.get(current_user_id)
-    if group.is_private and current_user not in group.members and current_user.role != 'admin':
-        return jsonify({'error': 'Vous n\'avez pas accès à ce groupe privé'}), 403
+    # Pour les groupes privés, vérifier l'authentification
+    if group.is_private:
+        current_user_id = get_jwt_identity()
+        if not current_user_id:
+            return jsonify({'error': 'Authentification requise pour ce groupe privé'}), 401
+        
+        current_user_id = int(current_user_id)  # Convertir en int
+        current_user = User.query.get(current_user_id)
+        if current_user not in group.members and current_user.role != 'admin':
+            return jsonify({'error': 'Vous n\'avez pas accès à ce groupe privé'}), 403
     
     creator = User.query.get(group.creator_id)
     
@@ -139,7 +146,7 @@ def get_group(group_id):
 @groups_bp.route('/groups/<int:group_id>', methods=['PUT'])
 @jwt_required()
 def update_group(group_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     group = Group.query.get(group_id)
     
     if not group:
@@ -179,7 +186,7 @@ def update_group(group_id):
 @groups_bp.route('/groups/<int:group_id>', methods=['DELETE'])
 @jwt_required()
 def delete_group(group_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     group = Group.query.get(group_id)
     
     if not group:
@@ -199,7 +206,7 @@ def delete_group(group_id):
 @groups_bp.route('/groups/<int:group_id>/join', methods=['POST'])
 @jwt_required()
 def join_group(group_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     group = Group.query.get(group_id)
     user = User.query.get(current_user_id)
     
@@ -226,7 +233,7 @@ def join_group(group_id):
 @groups_bp.route('/groups/<int:group_id>/leave', methods=['POST'])
 @jwt_required()
 def leave_group(group_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     group = Group.query.get(group_id)
     user = User.query.get(current_user_id)
     
@@ -253,7 +260,7 @@ def leave_group(group_id):
 @groups_bp.route('/groups/<int:group_id>/add-member', methods=['POST'])
 @jwt_required()
 def add_member(group_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     group = Group.query.get(group_id)
     
     if not group:
@@ -287,7 +294,7 @@ def add_member(group_id):
 @groups_bp.route('/groups/<int:group_id>/remove-member', methods=['POST'])
 @jwt_required()
 def remove_member(group_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     group = Group.query.get(group_id)
     
     if not group:

@@ -1,14 +1,18 @@
 from flask import Blueprint, request, jsonify
-from backend.models import db, Workshop, User
+from models import db, Workshop, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
 workshops_bp = Blueprint('workshops', __name__)
 
+def get_current_user_id():
+    """Utilitaire pour obtenir l'ID utilisateur actuel depuis le JWT"""
+    return int(get_jwt_identity())
+
 @workshops_bp.route('/workshops', methods=['POST'])
 @jwt_required()
 def create_workshop():
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     data = request.get_json()
     
     # Vérification des champs requis
@@ -58,7 +62,6 @@ def create_workshop():
     }), 201
 
 @workshops_bp.route('/workshops', methods=['GET'])
-@jwt_required()
 def get_workshops():
     # Paramètres de filtrage
     creator_id = request.args.get('creator_id', type=int)
@@ -109,7 +112,6 @@ def get_workshops():
     return jsonify(workshops_list), 200
 
 @workshops_bp.route('/workshops/<int:workshop_id>', methods=['GET'])
-@jwt_required()
 def get_workshop(workshop_id):
     workshop = Workshop.query.get(workshop_id)
     
@@ -156,7 +158,7 @@ def get_workshop(workshop_id):
 @workshops_bp.route('/workshops/<int:workshop_id>', methods=['PUT'])
 @jwt_required()
 def update_workshop(workshop_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     workshop = Workshop.query.get(workshop_id)
     
     if not workshop:
@@ -206,7 +208,7 @@ def update_workshop(workshop_id):
 @workshops_bp.route('/workshops/<int:workshop_id>', methods=['DELETE'])
 @jwt_required()
 def delete_workshop(workshop_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     workshop = Workshop.query.get(workshop_id)
     
     if not workshop:
@@ -226,7 +228,7 @@ def delete_workshop(workshop_id):
 @workshops_bp.route('/workshops/<int:workshop_id>/join', methods=['POST'])
 @jwt_required()
 def join_workshop(workshop_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     workshop = Workshop.query.get(workshop_id)
     user = User.query.get(current_user_id)
     
@@ -249,7 +251,7 @@ def join_workshop(workshop_id):
 @workshops_bp.route('/workshops/<int:workshop_id>/leave', methods=['POST'])
 @jwt_required()
 def leave_workshop(workshop_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = get_current_user_id()
     workshop = Workshop.query.get(workshop_id)
     user = User.query.get(current_user_id)
     
