@@ -124,7 +124,7 @@ def get_literary_works():
                 'id': work.book.id,
                 'title': work.book.title,
                 'author': work.book.author
-            }
+        }
         
         works_list.append(work_data)
     
@@ -348,7 +348,7 @@ def add_comment(work_id):
                 'username': new_comment.user.username
             }
         }
-    }), 201
+    }), 201 
 
 @literary_works_bp.route('/literary-works/publication-limit', methods=['GET'])
 @jwt_required()

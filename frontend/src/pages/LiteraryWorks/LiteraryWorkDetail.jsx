@@ -241,14 +241,14 @@ const LiteraryWorkDetail = ({ user: currentUser }) => {
           <form className="comment-form" onSubmit={handleCommentSubmit}>
             <div className="form-group">
               <label htmlFor="comment-content">Votre commentaire :</label>
-              <textarea
+            <textarea
                 id="comment-content"
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
+              value={commentContent}
+              onChange={(e) => setCommentContent(e.target.value)}
                 placeholder="Partagez votre avis sur cette œuvre..."
                 rows="4"
-                required
-              />
+              required
+            />
             </div>
             
             <div className="form-group">
@@ -276,13 +276,13 @@ const LiteraryWorkDetail = ({ user: currentUser }) => {
               </div>
             </div>
             
-            <button 
-              type="submit" 
+              <button 
+                type="submit" 
               className="btn btn-primary"
-              disabled={submittingComment || !commentContent.trim()}
-            >
+                disabled={submittingComment || !commentContent.trim()}
+              >
               {submittingComment ? 'Envoi...' : 'Publier le commentaire'}
-            </button>
+              </button>
           </form>
         ) : (
           <div className="login-prompt">
@@ -291,7 +291,7 @@ const LiteraryWorkDetail = ({ user: currentUser }) => {
             </Link>
           </div>
         )}
-
+        
         <div className="comments-list">
           {work.comments && work.comments.length > 0 ? (
             work.comments.map(comment => (
@@ -325,7 +325,7 @@ const LiteraryWorkDetail = ({ user: currentUser }) => {
                 </div>
                 <div className="comment-content">
                   {comment.content}
-                </div>
+                  </div>
               </div>
             ))
           ) : (

@@ -44,10 +44,10 @@ const LiteraryWorks = ({ user }) => {
       return
     }
 
-    try {
-      setLoading(true)
+      try {
+        setLoading(true)
       const data = await literaryWorkService.getAllWorks(debouncedFilters)
-      setWorks(data)
+        setWorks(data)
       
       // Mettre en cache les résultats
       setCache(prev => ({
@@ -55,12 +55,12 @@ const LiteraryWorks = ({ user }) => {
         [cacheKey]: data
       }))
       
-      setLoading(false)
-    } catch (err) {
+        setLoading(false)
+      } catch (err) {
       setError('Erreur lors du chargement des œuvres')
-      setLoading(false)
-      console.error(err)
-    }
+        setLoading(false)
+        console.error(err)
+      }
   }, [debouncedFilters, cacheKey, cache])
 
   const handleFilterChange = useCallback((filterName, value) => {
@@ -196,48 +196,48 @@ const LiteraryWorks = ({ user }) => {
       {/* Filtres */}
       <div className="filters-section">
         <div className="filters-row">
-          <div className="filter-group">
+        <div className="filter-group">
             <label>Genre :</label>
-            <select 
-              value={filters.type} 
+          <select 
+            value={filters.type} 
               onChange={(e) => handleFilterChange('type', e.target.value)}
-            >
+          >
               <option value="">Tous les genres</option>
-              <option value="poem">Poèmes</option>
-              <option value="novel">Romans</option>
-              <option value="short-story">Nouvelles</option>
-              <option value="essay">Essais</option>
-              <option value="other">Autres</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
+            <option value="poem">Poèmes</option>
+            <option value="novel">Romans</option>
+            <option value="short-story">Nouvelles</option>
+            <option value="essay">Essais</option>
+            <option value="other">Autres</option>
+          </select>
+        </div>
+        
+        <div className="filter-group">
             <label>Trier par :</label>
-            <select 
+          <select 
               value={filters.sort_by} 
               onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-            >
+          >
               <option value="recent">Plus récents</option>
               <option value="popularity">Popularité</option>
-            </select>
-          </div>
+          </select>
+        </div>
         </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
       {/* Liste des œuvres */}
-      <div className="works-grid">
+        <div className="works-grid">
         {works.length === 0 ? (
           <div className="no-works">
             <p>Aucune œuvre trouvée avec ces filtres.</p>
           </div>
         ) : (
-          works.map(work => (
+            works.map(work => (
             <WorkCard key={work.id} work={work} />
           ))
-        )}
-      </div>
+          )}
+        </div>
     </div>
   )
 }

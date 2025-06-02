@@ -105,9 +105,9 @@ def get_group(group_id):
             return jsonify({'error': 'Authentification requise pour ce groupe privé'}), 401
         
         current_user_id = int(current_user_id)  # Convertir en int
-        current_user = User.query.get(current_user_id)
+    current_user = User.query.get(current_user_id)
         if current_user not in group.members and current_user.role != 'admin':
-            return jsonify({'error': 'Vous n\'avez pas accès à ce groupe privé'}), 403
+        return jsonify({'error': 'Vous n\'avez pas accès à ce groupe privé'}), 403
     
     creator = User.query.get(group.creator_id)
     

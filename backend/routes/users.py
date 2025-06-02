@@ -195,7 +195,7 @@ def get_user(user_id):
         'profile_picture': user.profile_picture,
         'role': user.role,
         'created_at': user.created_at.isoformat()
-    }), 200
+    }), 200 
 
 @users_bp.route('/users/<int:user_id>/activity', methods=['GET'])
 @jwt_required()

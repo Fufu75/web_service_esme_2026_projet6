@@ -35,9 +35,9 @@ const Profile = ({ user: currentUser, setUser }) => {
         console.error(err)
       }
     }
-
+    
     if (currentUser) {
-      fetchData()
+    fetchData()
     }
   }, [currentUser])
 
@@ -130,8 +130,8 @@ const Profile = ({ user: currentUser, setUser }) => {
         <div className="stat-card">
           <h3>{activity?.statistics?.total_likes_given || 0}</h3>
           <p>Likes donnés</p>
-        </div>
-      </div>
+          </div>
+          </div>
 
       {/* Limite de publication */}
       {publicationLimit && (
@@ -180,7 +180,7 @@ const Profile = ({ user: currentUser, setUser }) => {
           Mes likes
         </button>
       </div>
-
+      
       {/* Contenu des onglets */}
       <div className="tab-content">
         {activeTab === 'overview' && (
@@ -237,9 +237,9 @@ const Profile = ({ user: currentUser, setUser }) => {
               <h3>Mes publications ({activity?.publications?.length || 0})</h3>
               <Link to="/literary-works/create" className="btn btn-primary">
                 Nouvelle publication
-              </Link>
-            </div>
-            
+            </Link>
+          </div>
+          
             <div className="works-grid">
               {activity?.publications?.length > 0 ? (
                 activity.publications.map(work => (
@@ -253,7 +253,7 @@ const Profile = ({ user: currentUser, setUser }) => {
                       <span className="work-type">{getTypeLabel(work.type)}</span>
                     </div>
                     
-                    <div className="work-meta">
+                  <div className="work-meta">
                       <span className="work-date">{formatDate(work.created_at)}</span>
                       <span className="work-status">{work.status}</span>
                     </div>
@@ -293,14 +293,14 @@ const Profile = ({ user: currentUser, setUser }) => {
                     <div className="comment-header">
                       <Link to={`/literary-works/${comment.literary_work.id}`} className="work-title">
                         {comment.literary_work.title}
-                      </Link>
+            </Link>
                       <span className="comment-date">{formatDate(comment.created_at)}</span>
                     </div>
                     
                     <div className="comment-content">
                       {comment.content}
-                    </div>
-                    
+          </div>
+          
                     {comment.rating && (
                       <div className="comment-rating">
                         {renderStarRating(comment.rating)}
@@ -310,7 +310,7 @@ const Profile = ({ user: currentUser, setUser }) => {
                     
                     <div className="comment-meta">
                       <span>Sur l'œuvre de {comment.literary_work.author}</span>
-                    </div>
+                  </div>
                   </div>
                 ))
               ) : (
@@ -334,15 +334,15 @@ const Profile = ({ user: currentUser, setUser }) => {
                       <h4>
                         <Link to={`/literary-works/${work.id}`}>
                           {work.title}
-                        </Link>
+            </Link>
                       </h4>
                       <span className="work-type">{getTypeLabel(work.type)}</span>
                     </div>
                     
                     <div className="work-author">
                       <span>par {work.author}</span>
-                    </div>
-
+          </div>
+          
                     <div className="work-stats">
                       <span>❤️ {work.likes_count}</span>
                     </div>
@@ -358,7 +358,7 @@ const Profile = ({ user: currentUser, setUser }) => {
               )}
             </div>
           </div>
-        )}
+          )}
       </div>
     </div>
   )
