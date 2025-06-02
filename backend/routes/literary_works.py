@@ -124,7 +124,7 @@ def get_literary_works():
                 'id': work.book.id,
                 'title': work.book.title,
                 'author': work.book.author
-        }
+            }
         
         works_list.append(work_data)
     
