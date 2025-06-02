@@ -8,8 +8,8 @@
 
 ## 1. Équipe de Développement
 
-| Membre | Rôle | Responsabilités |
-|--------|------|----------------|
+| Membre | Rôle |
+|--------|------|
 | **Gabin Fulcrand** |Développeur Fullstack |
 | **Carla Simons** | Développeuse Frontend |
 | **Hamza Hedna** | Développeur Backend |
